@@ -1,0 +1,32 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const { parseWorld, Game } = require('./world.js');
+const source = fs.readFileSync(__dirname + '/карта мира.txt', 'utf8');
+const world = parseWorld(source), game = new Game(world, () => 1);
+assert.equal(world.secretCount, 7); assert.equal(game.secretsFound.size, 0);
+assert.equal(game.inspect('неизвестный объект'), false); assert.equal(game.secretsFound.size, 0);
+game.inspect('тумбочка'); assert.equal(game.secretsFound.size, 1); assert.ok(game.message.secret);
+game.inspect('тумбочка'); assert.equal(game.secretsFound.size, 1); assert.equal(game.message.secret, undefined);
+game.take('пропуск посетителя'); assert.equal(game.secretsFound.size, 1);
+game.inspect('плотная штора'); assert.equal(game.secretsFound.size, 2);
+game.move('Коридор'); game.inspect('табличка отделения'); assert.equal(game.secretsFound.size, 3);
+game.inspect('дверь на лестницу'); assert.equal(game.secretsFound.size, 3);
+game.move('Пост медсестры'); game.inspect('письменный стол'); game.inspect('Настенные часы');
+assert.equal(game.secretsFound.size, 5);
+game.inspect('служебный шкаф'); game.use(game.availableRules()[0].id); game.take('ключ от лестницы');
+assert.equal(game.secretsFound.size, 5);
+game.move('Коридор'); game.move('Процедурная');
+game.inspect('металлический шкафчик'); game.inspect('зеркало'); assert.equal(game.secretsFound.size, 7);
+game.move('Коридор'); game.move('Палата № 13'); game.inspect('тумбочка'); assert.equal(game.secretsFound.size, 7);
+game.move('Коридор'); game.inspect('дверь на лестницу'); game.use(game.availableRules()[0].id);
+game.performAction(game.availableActions()[0].id); assert.equal(game.ended, true); assert.equal(game.secretsFound.size, 7);
+assert.equal(game.inventory.size, 2); // секреты не заполняют инвентарь
+assert.equal(new Game(world).secretsFound.size, 0);
+// Один и тот же объект в разных комнатах считается разными секретами.
+const fixture = 'ЛОКАЦИЯ\nА\nОПИСАНИЕ\n[ниша]\nПЕРЕХОДЫ\nюг -> Б\nОБЪЕКТЫ\n[ниша]\nУзор.\nСЕКРЕТЫ\n[ниша]\nПервый узор.\nЛОКАЦИЯ\nБ\nОПИСАНИЕ\n[ниша]\nПЕРЕХОДЫ\nсевер -> А\nОБЪЕКТЫ\n[ниша]\nДругой узор.\nСЕКРЕТЫ\n[ниша]\nВторой узор.';
+const genericWorld = parseWorld(fixture), generic = new Game(genericWorld);
+generic.inspect('ниша'); generic.move('Б'); generic.inspect('ниша');
+assert.equal(genericWorld.secretCount, 2); assert.equal(generic.secretsFound.size, 2);
+assert.equal(parseWorld('ЛОКАЦИЯ\nПустая комната\nОПИСАНИЕ\nТишина.').secretCount, 0);
+assert.throws(() => parseWorld(fixture.replace('[ниша]\nПервый узор.', '[другой объект]\nПервый узор.')), /Секрет ссылается/);
+console.log('Секреты: 0–7 находок, запрет повторного зачёта, сохранение между комнатами и в финале, сброс, независимые имена и неизменный инвентарь — пройдены.');

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a1c">
+  <title>Палата № 13 — ночная история</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="world.js" defer></script>
+  <script src="world-data.js" defer></script>
+  <script src="load-world.js" defer></script>
+  <script src="music.js" defer></script>
+  <script src="map-icons.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="masthead">
+      <a class="brand" href="index.html">ПАЛАТА <span>№ 13</span></a>
+      <span class="edition">ВИЗУАЛЬНАЯ НОВЕЛЛА · КВЕСТ</span>
+    </header>
+    <section id="start-screen" class="start-screen" aria-labelledby="start-title">
+      <div class="start-backdrop" aria-hidden="true"></div>
+      <div class="start-content">
+        <p class="start-kicker">ЗАГАДОЧНАЯ НОЧНАЯ ИСТОРИЯ</p>
+        <h1 id="start-title">Палата <span>№ 13</span></h1>
+        <p class="start-intro">Вы приехали навестить родственницу в больнице. Но теперь за окнами ночь, а вы просыпаетесь в незнакомой палате. Воспоминания обрываются. Что произошло — и как найти выход?</p>
+        <button id="start-game" class="start-button" type="button" disabled>Начать игру <span aria-hidden="true">→</span></button>
+        <p id="start-status" class="start-status" role="status">Готовим историю…</p>
+      </div>
+    </section>
+    <div id="gameplay-chapter" class="chapter" hidden><span class="signal"></span> НОЧЬ В ОТДЕЛЕНИИ</div>
+    <div id="sound-controls" class="sound-controls" role="group" aria-label="Музыка" hidden>
+      <button id="music-toggle" class="quiet-button" type="button" aria-pressed="false" disabled>Включить музыку</button>
+      <div class="volume-control">
+        <label for="music-volume">Громкость</label>
+        <input id="music-volume" type="range" min="0" max="100" step="1" value="18">
+        <output id="music-volume-value" for="music-volume">18%</output>
+      </div>
+      <span id="music-status" role="status"></span>
+    </div>
+    <div id="music-audio" hidden></div>
+    <section id="loader" class="loading-panel" aria-live="polite" hidden>
+      <p id="load-message">Открываем историю…</p>
+      <button id="retry-load" class="file-button" type="button" hidden>Попробовать снова</button>
+    </section>
+    <div id="game" hidden>
+      <div id="secrets-panel" class="secrets-panel" hidden>
+        <span>Секреты отделения</span>
+        <strong id="secrets-progress" role="status" aria-live="polite"></strong>
+      </div>
+      <section class="story" aria-labelledby="location-title">
+        <div class="eyebrow">ВЫ НАХОДИТЕСЬ ЗДЕСЬ</div>
+        <h1 id="location-title" tabindex="-1"></h1>
+        <figure id="location-visual" class="location-visual" hidden></figure>
+        <div id="first-visit" class="first-visit"></div>
+        <div id="description" class="description"></div>
+        <div id="movement-events" class="movement-events" role="status" aria-live="polite" hidden></div>
+        <section id="random-event-panel" class="random-event-panel" aria-labelledby="random-event-title" aria-live="polite" hidden>
+          <div class="eyebrow">В ОТДЕЛЕНИИ</div>
+          <h2 id="random-event-title"></h2>
+          <div id="random-event-text"></div>
+        </section>
+        <section id="characters-panel" class="characters-panel" aria-labelledby="characters-title" hidden>
+          <h2 id="characters-title">Рядом с вами</h2>
+          <div id="characters" class="character-list"></div>
+        </section>
+        <section id="character-card" class="character-card" tabindex="-1" aria-label="Персонаж" hidden>
+          <h2 id="character-name"></h2>
+          <div id="character-description"></div>
+          <a id="start-dialogue" class="text-action character-talk" href="#dialogue-panel">Начать разговор</a>
+          <p id="no-dialogue" class="small" hidden>Сейчас разговор не завязывается.</p>
+        </section>
+        <section id="dialogue-panel" class="dialogue-panel" tabindex="-1" aria-labelledby="dialogue-title" hidden>
+          <h2 id="dialogue-title"></h2>
+          <div id="dialogue-lines" role="log" aria-live="polite" aria-relevant="additions"></div>
+          <button id="dialogue-next" class="quiet-button" type="button">Далее ↓</button>
+          <p id="dialogue-interrupted" class="small" hidden>Разговор прервался.</p>
+        </section>
+        <section id="message-panel" class="message-panel" tabindex="-1" aria-label="Текущее сообщение" aria-live="polite" aria-atomic="true" hidden>
+          <h2 id="message-title"></h2>
+          <p id="secret-notice" class="secret-notice" hidden></p>
+          <div id="message-text"></div>
+          <p id="message-notice" class="message-notice" hidden></p>
+          <div id="object-actions" class="object-actions"></div>
+        </section>
+        <section id="inventory-panel" class="inventory-panel" aria-labelledby="inventory-title" hidden>
+          <h2 id="inventory-title">Инвентарь</h2>
+          <ul id="inventory" class="inventory"></ul>
+        </section>
+      </section>
+      <section class="map-panel" aria-labelledby="map-title">
+        <div class="map-heading"><h2 id="map-title">План отделения</h2><span id="progress"></span></div>
+        <div class="map-tools">
+          <p class="map-help">Нажмите на соседнюю комнату, чтобы пройти дальше.</p>
+          <button id="map-center" class="map-center" type="button" aria-label="Показать мою позицию на карте">К игроку</button>
+        </div>
+        <div id="map-viewport" class="map-viewport" tabindex="0" role="region" aria-label="Карта отделения. Большую карту можно прокручивать.">
+          <div id="map" class="map"></div>
+        </div>
+        <div id="map-legend" class="legend"></div>
+        <p class="small map-note">Впереди ↑ · Большую карту можно сдвигать. Замок отмечает объект внутри комнаты.</p>
+      </section>
+      <footer><span>В тишине каждый шаг звучит громче.</span><button id="restart" type="button">Начать заново ↻</button></footer>
+    </div>
+    <section id="ending-panel" class="ending-panel" aria-labelledby="ending-title" hidden>
+      <div class="eyebrow">КОНЕЦ ИСТОРИИ</div>
+      <h1 id="ending-title" tabindex="-1">Ночь позади</h1>
+      <div id="ending-text" class="description"></div>
+      <p id="ending-secrets" class="ending-secrets" hidden></p>
+      <button id="ending-restart" class="file-button" type="button"></button>
+    </section>
+    <noscript>Для игры включите JavaScript в настройках браузера.</noscript>
+  </main>
+</body>
+</html>
